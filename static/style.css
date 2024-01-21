@@ -1,0 +1,8 @@
+#map {
+    height: 85vh;
+    width: 70vw;
+}
+
+.station-label {
+    font-family: Helvetica Neue;
+}

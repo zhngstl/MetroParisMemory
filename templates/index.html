@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paris Metro Station Game</title>
+    <!-- Add any additional CSS or link to external stylesheets here -->
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+
+    <h1>Paris Métro Memory Game</h1>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
+    <script>
+        var map = L.map('map').setView([48.8566, 2.3522], 12); // Default view set to Paris
+        var CartoDB_PositronNoLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        var stations = JSON.parse('{{ stations | tojson | safe }}');
+        var lines = JSON.parse('{{ lines | tojson | safe }}');
+        
+        var lineColors = {};
+        lines.features.forEach(function(feature) {
+            var properties = feature.properties;
+            
+            // Check if the "show" property is equal to "METRO"
+            if (properties.metro === 1) {
+                var coordinates = feature.geometry.coordinates.map(function(coord) {
+                    return [coord[1], coord[0]];  // Swap latitude and longitude for Leaflet
+                });
+                
+                var indice_line = Number(feature.properties.indice_lig);
+                lineColors[indice_line] = feature.properties.colourweb_hexa;
+                
+                L.polyline(coordinates, { color: '#' + lineColors[indice_line] }).addTo(map);
+            }
+        });
+        
+        // Create a dictionary to store station coordinates and line colors
+        var stationData = {};
+
+        stations.features.forEach(function(feature) {
+            var properties = feature.properties;
+            
+            // Check if the "mode" property is equal to "METRO"
+            if (properties.mode === "METRO") {
+                var coordinates = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+                var stationName = feature.properties.nom_zdc;
+                var lineId = Number(feature.properties.indice_lig);
+                var lineColor = lineColors[lineId] || 'black'; // Default to black if color is not found
+                
+                if (stationData[stationName]) {
+                    // If the station already exists in the dictionary, update its data
+                    stationData[stationName].coordinates[0] += coordinates[0];
+                    stationData[stationName].coordinates[1] += coordinates[1];
+                    stationData[stationName].count += 1;
+                } else {
+                    // If the station is not in the dictionary, add it
+                    stationData[stationName] = {
+                        coordinates: coordinates,
+                        lineColor: lineColor,
+                        count: 1
+                    };
+                }
+            }
+        });
+                
+        // Create markers based on the averaged coordinates
+        Object.keys(stationData).forEach(function(stationName) {
+            var averagedCoordinates = [
+                stationData[stationName].coordinates[0] / stationData[stationName].count,
+                stationData[stationName].coordinates[1] / stationData[stationName].count
+            ];
+
+            var circleMarker = L.circleMarker(averagedCoordinates, {
+                color: "#a9a9a9",
+                weight: 1,
+                fillColor: "#ffffff",
+                fillOpacity: 1,
+                radius: 5
+            });
+
+            var labelMarker = L.marker(averagedCoordinates, {
+                icon: L.divIcon({
+                    className: 'station-label',
+                    html: stationName
+                })
+            });
+            
+            circleMarker.addTo(map);
+            labelMarker.addTo(map);
+        });
+        
+    </script>
+    
+    <!-- Add any additional JavaScript or link to external scripts here -->
+
+</body>
+</html>
