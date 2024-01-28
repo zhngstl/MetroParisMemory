@@ -13,6 +13,11 @@
     <h1>Paris Métro Memory Game</h1>
 
     <div id="map"></div>
+    <form id="stationForm">
+        <label for="stationInput">Enter Station Name:</label>
+        <input type="text" id="stationInput" name="stationInput" required>
+        <button type="submit">Submit</button>
+    </form>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>
@@ -98,10 +103,64 @@
             circleMarker.addTo(map);
             labelMarker.addTo(map);
         });
-        
+
+        // Create a sample station marker with an initial visibility set to false
+        var stationMarker = L.marker([48.8566, 2.3522], { opacity: 0, interactive: false })
+        .bindPopup("Station Name: Your Station")
+        .addTo(map);
+
+        // Event listener for user input (simplified for demonstration purposes)
+        document.getElementById('stationInput').addEventListener('change', function(event) {
+        var userInput = event.target.value.trim().toLowerCase();
+
+        // Check if the user input matches the expected station name
+        if (userInput === 'your station') {
+            // Set the visibility of the station marker to true
+            stationMarker.setOpacity(1);
+            stationMarker.options.interactive = true; // Enable interactivity if needed
+        } else {
+            // Set the visibility of the station marker to false
+            stationMarker.setOpacity(0);
+            stationMarker.options.interactive = false; // Disable interactivity if needed
+        }
+        });
+
+
+        document.getElementById('stationForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission behavior
+
+            // Get the user input
+            var userInput = document.getElementById('stationInput').value.trim().toLowerCase();
+
+            // Check if the user input matches the expected station name(s)
+            if (isValidStation(userInput)) {
+                // Handle correct input (e.g., show marker, update game progress, etc.)
+                alert('Correct station!'); // Replace this with your logic
+            } else {
+                // Handle incorrect input (e.g., show message, decrement score, etc.)
+                alert('Incorrect station. Try again.'); // Replace this with your logic
+            }
+
+            // Optional: Save game progress in the user's cache/local storage
+            saveGameProgress(userInput);
+        });
+
+        // Function to check if the user input is a valid station name
+        function isValidStation(userInput) {
+            // Replace this with your logic to validate the station name
+            // For example, compare against an array of valid station names
+            var validStations = ['station1', 'station2', 'station3'];
+            return validStations.includes(userInput);
+        }
+
+        // Function to save game progress in the user's cache/local storage
+        function saveGameProgress(userInput) {
+            // Replace this with your logic to save game progress
+            // For example, use localStorage to store game state
+            localStorage.setItem('gameProgress', userInput);
+        };
+
     </script>
-    
-    <!-- Add any additional JavaScript or link to external scripts here -->
 
 </body>
 </html>
