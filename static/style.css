@@ -1,9 +1,84 @@
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.left-side {
+    height: 100%;
+    width: 70%;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    overflow-x: hidden;
+    left: 0;
+    /*padding-top: 20px;*/
+}
+
+.right-side {
+    height: 100%;
+    width: 29%;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    overflow-x: hidden;
+    right: 0;
+    /*padding-top: 20px;*/
+}
+
 #map {
-    height: 85vh;
-    width: 70vw;
+    height: 100%;
+    /*height: 85vh;
+    width: 70vw;*/
+}
+
+#score {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#guessed-stations {
+    list-style-type: none;
+    padding: 0;
+}
+
+#guessed-stations li {
+    margin-bottom: 10px;
+}
+
+#toggleBtn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.popup-content {
+    width: 80%;
+    margin: 0 auto;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
 }
 
 .station-label {
-    font-family: Helvetica;
-    font-size: xx-small;
+    display: block; /* Make the label visible */
+    font-size: 12px; /* Font size of the label text */
+    font-family: 'Roboto', sans-serif;
 }
