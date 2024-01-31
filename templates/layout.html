@@ -22,13 +22,19 @@
     <body>
         <div class="left-side" id="leftSide">
             <div id="map"></div>
+            <form id="stationForm">
+                <label for="stationInput">Enter Station Name:</label>
+                <input type="text" id="stationInput" name="stationInput">
+                <input type="submit" value="Submit">
+            </form>
         </div>
         <div class="right-side">
             <h2>Score</h2>
             <p id="score">0%</p>
             <h2>Guessed Stations</h2>
-            <ul id="guessed-stations"></ul>
+            <ul id="guessed-stations-list"></ul>
         </div>
+        
 
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script src="https://unpkg.com/leaflet-providers@latest/leaflet-providers.js"></script>

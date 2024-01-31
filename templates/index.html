@@ -4,7 +4,7 @@
 <script>
     // Initialize Leaflet map
     var map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 12); // Default view set to Paris
-
+    map.doubleClickZoom.disable(); 
     // Initialize the map with Carto style
     var CartoDB_PositronNoLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -18,6 +18,11 @@
 
     var lineColors = {};
     var stationData = {};
+    var guessedStations = new Set();
+    var correctlyGuessedStations = 0;
+
+   var labelMarkers = {};
+   var circleMarkers = {};
 
     // Draw metro lines on the map with their respective color
     lines.features.forEach(function(feature) {
@@ -54,11 +59,13 @@
                     lineColor: lineColor,
                 };
             }
-
             // Add the coordinates to the station's data
             stationData[stationName].coordinates.push(coordinates);
         }
+        
     });
+    console.log(stationData['Ourcq'].lineColor);
+    var totalStations = Object.keys(stationData).length;
 
     // Create a form for user input
     var form = L.control({ position: 'topright' });
@@ -80,21 +87,34 @@
         var circleMarker = L.circleMarker(data.coordinates[0], {
             color: "#a9a9a9",
             weight: 1,
-            fillColor: "#ffffff",
+            fillColor: 'white',
             fillOpacity: 1,
             radius: 3
         });
 
+        circleMarker.addTo(map);
+        circleMarkers[stationName] = circleMarker;
+
         // Create a label marker for each station at the average of its coordinates
         var labelMarker = L.marker(averageCoordinates, {
             icon: L.divIcon({
-                className: 'station-label',
+                className: 'station-label hidden-label',
                 html: stationName
             })
         });
 
-        circleMarker.addTo(map);
         labelMarker.addTo(map);
+        labelMarkers[stationName] = labelMarker;
+        
+        var allLabels = document.querySelectorAll('.station-label');
+    
+        // Ensure all labels have the 'data-name' attribute
+        allLabels.forEach(function (label) {
+            if (!label.hasAttribute('data-name')) {
+                label.setAttribute('data-name', stationName);
+            }
+        });
+        
     });
 
     // Function to calculate the average coordinates
@@ -114,25 +134,135 @@
     }
     
     // Handle form submission
-    document.getElementById('stationForm').addEventListener('submit', function(event) {
+    document.getElementById('stationForm').addEventListener('submit', function (event) {
         event.preventDefault();
         var input = document.getElementById('stationInput').value;
         checkStationName(input);
     });
     
-    // Function to show result message
+    // Initialize a variable to keep track of the currently displayed station name
+    var displayedStationName = null;
+    
+    // Function to show label for a specific station
+    function showLabel(stationName) {    
+        // Hide the previously displayed station name if it exists
+        if (displayedStationName !== null) {
+            var previousLabel = document.querySelector('.station-label[data-name="' + displayedStationName + '"]');
+            
+    
+            if (previousLabel) {
+                previousLabel.classList.add('hidden-label');
+            }
+        }
+    
+        // Update the displayed station name
+        displayedStationName = stationName;
+    
+        // Show the label for the new station
+        var currentLabel = document.querySelector('.station-label[data-name="' + stationName + '"]');
+        
+    
+        if (currentLabel) {
+            currentLabel.classList.remove('hidden-label');
+        }
+    }
+
+    // Function to show the result message
     function showResultMessage(text) {
         var resultMessage = document.getElementById('resultMessage');
         var resultText = document.getElementById('resultText');
-        resultText.textContent = text;resultMessage.classList.remove('hidden-message');
+        var guessedStationsList = document.getElementById('guessed-stations-list');
+
+        // Create resultMessage and resultText if they don't exist
+        if (!resultMessage) {
+            resultMessage = document.createElement('div');
+            resultMessage.id = 'resultMessage';
+            document.body.appendChild(resultMessage);
+        }
+
+        if (!resultText) {
+            resultText = document.createElement('p');
+            resultText.id = 'resultText';
+            resultMessage.appendChild(resultText);
+        }
+
+        resultText.textContent = text;
+        resultMessage.classList.remove('hidden-message');
+
+        // Update guessed stations list
+        if (!guessedStationsList) {
+            console.error('Guessed stations list element not found.');
+            return;
+        }
+
+        // Check if the station name is correct before appending to the list
+        if (text.includes('has been found')) {
+            // Append correctly guessed station to the list
+            var guessedStationItem = document.createElement('li');
+            guessedStationItem.textContent = text;
+            guessedStationsList.appendChild(guessedStationItem);
+
+            // Update score
+            guessedStations.add(text.replace(' has been found!', ''));
+            correctlyGuessedStations = guessedStations.size;
+            updateScore();
+        }
+        
     }
-    
+
+    // Function to update the score
+    function updateScore() {
+        var scoreElement = document.getElementById('score');
+        var score = (correctlyGuessedStations / totalStations) * 100;
+        scoreElement.textContent = score.toFixed(2) + '%';
+    }
+
     // Function to check the station name
     function checkStationName(name) {
-        if (stationData.hasOwnProperty(name)) {
+        var guessedStationsList = document.getElementById('guessed-stations-list');
+
+        // Check if the station name has already been guessed correctly
+        if (guessedStations.has(name)) {
+            // Station has already been guessed, update the label and exit
+            showLabel(name);
+            return;
+        }
+
+        if (stationData.hasOwnProperty(name) && !guessedStations.has(name)) {
+            guessedStations.add(name); // Add guessed station to the Set
+            correctlyGuessedStations++;
+
+            updateScore();
             showResultMessage(`The station ${name} has been found!`);
-        } 
-        else {
+            showLabel(name);
+            map._onResize();
+
+            // Update guessed stations list
+            if (!guessedStationsList) {
+                console.error('Guessed stations list element not found.');
+                return;
+            }
+
+            // Change color of the circle marker for the correctly guessed station
+            var guessedStationMarker = circleMarkers[name];
+            if (guessedStationMarker) {
+                var fillLineColor = stationData[name].lineColor;
+                console.log(guessedStationMarker.options)
+                guessedStationMarker.setStyle({
+                    fillColor: fillLineColor,
+                    color: 'red'
+                });
+                console.log(guessedStationMarker.options)
+            }
+
+            // Check if the station name is correct before appending to the list
+            if (name.includes('has been found')) {
+                // Append correctly guessed station to the list
+                var guessedStationItem = document.createElement('li');
+                guessedStationItem.textContent = name;
+                guessedStationsList.appendChild(guessedStationItem);
+            }
+        } else {
             showResultMessage(`The station ${name} has not been found. Please try again.`);
         }
     }
