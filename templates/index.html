@@ -228,7 +228,10 @@
     // Function to check the station name
     function checkStationName(name) {
         var guessedStationsList = document.getElementById('guessed-stations-list');
-        var formattedInput = name.toLowerCase();
+
+        var nameParts = name.split('/');
+        var nameBeforeFlash = nameParts[0];
+        var formattedInput = nameBeforeFlash.replace(/-/g, ' ').replace(/\s+/g, ' ').toLowerCase();
 
         // Check if the station name has already been guessed correctly
         if (guessedStations.has(formattedInput)) {
@@ -260,7 +263,7 @@
             // Correct station found, update the label and proceed
             guessedStations.add(foundStation); // Add guessed station to the Set
             correctlyGuessedStations++;
-    
+            
             updateScore();
             showResultMessage(`The station ${foundStation} has been found!`);
             showLabel(foundStation);
@@ -287,7 +290,14 @@
             guessedStationItem.textContent = foundStation;
             guessedStationsList.appendChild(guessedStationItem);
         } else {
-            showResultMessage(`The station ${name} has not been found. Please try again.`);
+            if (guessedStations.has(foundStation)) {
+                showLabel(foundStation);
+                map._onResize();
+            }
+            else {
+                showResultMessage(`The station ${name} has not been found. Please try again.`);
+            }
+            
         }
     }
     
