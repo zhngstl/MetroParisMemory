@@ -64,7 +64,7 @@
         }
         
     });
-    console.log(stationData['Ourcq'].lineColor);
+
     var totalStations = Object.keys(stationData).length;
 
     // Create a form for user input
@@ -116,7 +116,20 @@
         });
         
     });
+    
+    // Handle form submission
+    document.getElementById('stationForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        var input = document.getElementById('stationInput').value;
+        checkStationName(input);
 
+        // Clear the form input
+        document.getElementById('stationForm').reset();
+    });
+    
+    // Initialize a variable to keep track of the currently displayed station name
+    var displayedStationName = null;
+    
     // Function to calculate the average coordinates
     function calculateAverageCoordinates(coordinatesArray) {
         var sumLat = coordinatesArray.reduce(function (sum, coord) {
@@ -132,16 +145,6 @@
 
         return [averageLat, averageLng];
     }
-    
-    // Handle form submission
-    document.getElementById('stationForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-        var input = document.getElementById('stationInput').value;
-        checkStationName(input);
-    });
-    
-    // Initialize a variable to keep track of the currently displayed station name
-    var displayedStationName = null;
     
     // Function to show label for a specific station
     function showLabel(stationName) {    
@@ -160,7 +163,6 @@
     
         // Show the label for the new station
         var currentLabel = document.querySelector('.station-label[data-name="' + stationName + '"]');
-        
     
         if (currentLabel) {
             currentLabel.classList.remove('hidden-label');
@@ -194,18 +196,24 @@
             console.error('Guessed stations list element not found.');
             return;
         }
+        
+        // Extract the station name from the result text using a more robust approach
+        var stationNameMatch = text.match(/The station (.+?) has been found/);
+        var stationName = stationNameMatch ? stationNameMatch[1] : null;
 
-        // Check if the station name is correct before appending to the list
-        if (text.includes('has been found')) {
-            // Append correctly guessed station to the list
-            var guessedStationItem = document.createElement('li');
-            guessedStationItem.textContent = text;
-            guessedStationsList.appendChild(guessedStationItem);
+        if (stationName) {
+            // Check if the station has already been guessed correctly
+            if (!guessedStations.has(stationName)) {
+                // Append correctly guessed station to the list
+                var guessedStationItem = document.createElement('li');
+                guessedStationItem.textContent = text;
+                guessedStationsList.appendChild(guessedStationItem);
 
-            // Update score
-            guessedStations.add(text.replace(' has been found!', ''));
-            correctlyGuessedStations = guessedStations.size;
-            updateScore();
+                // Update score
+                guessedStations.add(stationName);
+                correctlyGuessedStations = guessedStations.size;
+                updateScore();
+            }
         }
         
     }
@@ -220,51 +228,94 @@
     // Function to check the station name
     function checkStationName(name) {
         var guessedStationsList = document.getElementById('guessed-stations-list');
+        var formattedInput = name.toLowerCase();
 
         // Check if the station name has already been guessed correctly
-        if (guessedStations.has(name)) {
+        if (guessedStations.has(formattedInput)) {
             // Station has already been guessed, update the label and exit
-            showLabel(name);
+            showLabel(formattedInput);
             return;
         }
+    
+        var foundStation = null;
+        var minDistance = Infinity;
+    
+        // Iterate through station names and find the closest match
+        Object.keys(stationData).forEach(function (station) {
+            // Calculate Levenshtein distance
+            var stationParts = station.split('/');
+            var stationBeforeSlash = stationParts[0];
 
-        if (stationData.hasOwnProperty(name) && !guessedStations.has(name)) {
-            guessedStations.add(name); // Add guessed station to the Set
+            var distance = levenshteinDistance(formattedInput, stationBeforeSlash.replace(/-/g, ' ').replace(/\s+/g, ' ').toLowerCase());
+    
+            // Check if the distance is within the threshold
+            const MAX_LEVENSHTEIN_DISTANCE = 3;
+            if (distance < MAX_LEVENSHTEIN_DISTANCE && distance < minDistance) {
+                foundStation = station;
+                minDistance = distance;
+            }
+        });
+    
+        if (foundStation && !guessedStations.has(foundStation)) {
+            // Correct station found, update the label and proceed
+            guessedStations.add(foundStation); // Add guessed station to the Set
             correctlyGuessedStations++;
-
+    
             updateScore();
-            showResultMessage(`The station ${name} has been found!`);
-            showLabel(name);
+            showResultMessage(`The station ${foundStation} has been found!`);
+            showLabel(foundStation);
             map._onResize();
-
+    
             // Update guessed stations list
             if (!guessedStationsList) {
                 console.error('Guessed stations list element not found.');
                 return;
             }
-
+    
             // Change color of the circle marker for the correctly guessed station
-            var guessedStationMarker = circleMarkers[name];
+            var guessedStationMarker = circleMarkers[foundStation];
             if (guessedStationMarker) {
-                var fillLineColor = stationData[name].lineColor;
-                console.log(guessedStationMarker.options)
+                var fillLineColor = stationData[foundStation].lineColor;
                 guessedStationMarker.setStyle({
                     fillColor: fillLineColor,
                     color: 'red'
                 });
-                console.log(guessedStationMarker.options)
             }
-
-            // Check if the station name is correct before appending to the list
-            if (name.includes('has been found')) {
-                // Append correctly guessed station to the list
-                var guessedStationItem = document.createElement('li');
-                guessedStationItem.textContent = name;
-                guessedStationsList.appendChild(guessedStationItem);
-            }
+    
+            // Append correctly guessed station to the list
+            var guessedStationItem = document.createElement('li');
+            guessedStationItem.textContent = foundStation;
+            guessedStationsList.appendChild(guessedStationItem);
         } else {
             showResultMessage(`The station ${name} has not been found. Please try again.`);
         }
     }
+    
+    // Function to calculate Levenshtein distance between two strings
+    function levenshteinDistance(str1, str2) {
+        const m = str1.length;
+        const n = str2.length;
+    
+        const dp = Array.from(Array(m + 1), () => Array(n + 1).fill(0));
+    
+        for (let i = 0; i <= m; i++) {
+            for (let j = 0; j <= n; j++) {
+                if (i === 0) {
+                    dp[i][j] = j;
+                } else if (j === 0) {
+                    dp[i][j] = i;
+                } else {
+                    dp[i][j] = Math.min(
+                        dp[i - 1][j - 1] + (str1[i - 1] !== str2[j - 1] ? 1 : 0),
+                        dp[i][j - 1] + 1,
+                        dp[i - 1][j] + 1
+                    );
+                }
+            }
+        }
+    
+        return dp[m][n];
+    }
+    
 </script>
 {% endblock %}
