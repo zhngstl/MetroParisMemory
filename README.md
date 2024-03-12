@@ -4,8 +4,8 @@
 
 Exploring the vibrant city of Paris just became an engaging challenge with the Paris Metro Station Game. Drawing inspiration from popular memory games like [Memory Pour Paris](https://memory.pour.paris/) and [Name SF Streets](https://carvin.github.io/sf-street-names/), this web app transforms the exploration of Parisian metro stations into an exciting gaming experience.
 
-## Demo
-[![Demo](https://markdown-videos-api.jorgenkh.no/url?url=https%3A%2F%2Fyoutu.be%2FZF4eB_3864Q)](https://youtu.be/ZF4eB_3864Q)
+## Motivation
+This project was created as part of CS50x Final Project. First time programming using HTML/CSS and Javascript. My idea are quite clear, but the way the code was implemented should be more optimized. This project is now abandonned and won't receive any update.
 
 ## Game Overview
 
