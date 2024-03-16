@@ -5,13 +5,13 @@
 Exploring the vibrant city of Paris just became an engaging challenge with the Paris Metro Station Game. Drawing inspiration from popular memory games like [Memory Pour Paris](https://memory.pour.paris/) and [Name SF Streets](https://carvin.github.io/sf-street-names/), this web app transforms the exploration of Parisian metro stations into an exciting gaming experience.
 
 ## Motivation
-This project was created as part of CS50x Final Project. First time programming using HTML/CSS and Javascript. My idea are quite clear, but the way the code was implemented should be more optimized. This project is now abandonned and won't receive any update.
+This project was created as part of CS50x Final Project. First time programming using HTML/CSS and Javascript. While my ideas were well-defined, the implementation of the code could have been more optimized. This project has been abandonned and will not receive any further updates
 
 ## Game Overview
 
 ### How it Works
 
-The game's premise is straightforward. Players input the names of Paris metro stations, earning points for each correct entry. The twist? The game doesn't store cookies, ensuring a fresh start with each session. The goal is to explore the vast network of Paris metro stations and test your knowledge of the city's transit system.
+The game's premise is straightforward. Players input the names of Paris metro stations, earning points for each correct entry. The game doesn't store cookies, ensuring a fresh start with each session. The goal is to explore the vast network of Paris metro stations and test your knowledge of the city's transit system.
 
 ### User Interface
 
@@ -96,8 +96,4 @@ score = (station_found / total_station) * 100
 
 ### Typos and Levenshtein Distance
 
-For an added challenge, the game handles typos using [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance). This feature allows players to have a more forgiving experience, especially when dealing with variations or minor errors in station names.
-
-## Conclusion
-
-The Paris Metro Station Game is a delightful blend of exploration and knowledge-testing within the city of Paris. Whether you're a local resident or a virtual traveler, this game offers a unique way to engage with the iconic Parisian metro system. Install the game, start exploring, and see how well you know the metro stations of the City of Lights. Happy gaming!
+The game handles typos using [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance). This feature allows players to have a more forgiving experience, especially when dealing with variations or minor errors in station names.
